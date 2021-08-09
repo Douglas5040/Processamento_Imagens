@@ -5,7 +5,7 @@ import numpy as np
 import os
 import glob
 import time
-from picamera import PiCamera
+# from picamera import PiCamera
 
 
 # Definicao da funcao morfologica
@@ -37,9 +37,6 @@ def analyze_bars(matblobs,countours_frame, file):
     box = cv2.boxPoints(rot_rect)
     box = np.int0(box)
 
-    # Desenhando o contorno da area da barra encontrada
-    frame = cv2.drawContours(countours_frame,[box],0,(0,255,0),1)
-
     on_count = cv2.contourArea(bar)
     total_count = sw*sh
     if total_count <= 0:
@@ -53,13 +50,12 @@ def analyze_bars(matblobs,countours_frame, file):
       
 
     # Area minima 
-    if sw * sh < 1000:
+    if sw * sh < 800:
       continue
 
     # area maxima
-    if sw * sh > 4000:
+    if sw * sh > 2000:
       continue  
-
 
 
     #print('Area: ', sw * sh)
@@ -67,27 +63,29 @@ def analyze_bars(matblobs,countours_frame, file):
     # Proporcao da barra
     rect_ratio = sw / sh
 
-    #print('rect_ratio:', rect_ratio)
+    # print('rect_ratio:', rect_ratio)
 
-    if rect_ratio <= 9 or rect_ratio >= 14.5:
+    if rect_ratio <= 3 or rect_ratio >= 15.5:
 
       continue
-
 
     # Desenhando o contorno da area da barra encontrada
     #frame = cv2.drawContours(countours_frame,[box],0,(0,0,255),1)
 
     # Proporcao do preenchimento
     fill_ratio = on_count / total_count
-    #print('fill_ratio: ', fill_ratio)
+    # print('fill_ratio: ', fill_ratio)
 
-    if fill_ratio < 0.7 :
-      continue
+    # if fill_ratio < 0.6 :
+    #   continue
 
-    #print('countours_frame[int(cy),int(cx),0] ->', countours_frame[int(cy),int(cx),0])
-    # Remove as barras que sao mais claras
-    if countours_frame[int(cy),int(cx),0] > 200:
-      continue
+    # print('countours_frame[int(cy),int(cx),0] ->', countours_frame[int(cy),int(cx),0])
+    # # Remove as barras que sao mais claras
+    # if countours_frame[int(cy),int(cx),0] > 100:
+    #   continue
+
+    # Desenhando o contorno da area da barra encontrada
+    frame = cv2.drawContours(countours_frame,[box],0,(0,255,0),1)
 
     valid_bars.append(bar)
 
@@ -103,14 +101,14 @@ def analyze_bars(matblobs,countours_frame, file):
 
 def main_process():
 
-  camera = PiCamera() 
+  # camera = PiCamera() 
 
-  camera.start_preview()
-  time.sleep(10)
-  camera.capture('../imgs/in/second_tests/image_' + time.strftime('%Y-%m-%d_%H:%M:%S') + '.jpg')
-  camera.stop_preview()
+  # camera.start_preview()
+  # time.sleep(10)
+  # camera.capture('../imgs/in/second_tests/image_' + time.strftime('%Y-%m-%d_%H:%M:%S') + '.jpg')
+  # camera.stop_preview()
 
-  for file in glob.glob("../imgs/in/second_tests/*"):
+  for file in glob.glob("../imgs/in/third_tests/*"):
 
     img = cv2.imread(file)  
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -121,7 +119,9 @@ def main_process():
     # Aplicando a tecnica 'thresholding Otsu'
     # Extrair a caracteristica da binarizacao da imagem
     # Otsu thresholding     
-    ret, thresh1 = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)  
+    # ret, thresh1 = cv2.threshold(blurred, 9, 100, cv2.THRESH_TOZERO + cv2.THRESH_OTSU)  
+    thresh1 = cv2.adaptiveThreshold (blurred, 190, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
+
     cv2.imshow("thresholding",thresh1)
     cv2.waitKey(1)
 
@@ -140,14 +140,26 @@ def main_process():
     cv2.imwrite('../imgs/out/saida7.png', img_with_bars)
     cv2.waitKey(0)
 
-    
-    plt.subplot(131),plt.imshow(img, cmap = 'gray')
-    plt.title('Original'), plt.xticks([]), plt.yticks([])
-    plt.subplot(132),plt.imshow(thresh1,cmap = 'gray')
-    plt.title('Segmentacao'), plt.xticks([]), plt.yticks([])
-    plt.subplot(133),plt.imshow(img_with_bars,cmap = 'gray')
-    plt.title('Barras encontradas'), plt.xticks([]), plt.yticks([])
+    fx, plots = plt.subplots(1, 1, figsize=(35,40))
+    plots.set_title("Original Image")
+    plots.imshow(img, cmap = 'gray')
+
+    fx, plots2 = plt.subplots(1, 1, figsize=(35,40))
+    plots2.set_title("Segmentation Image")
+    plots2.imshow(thresh1, cmap = 'gray')
+
+    fx, plots3 = plt.subplots(1, 1, figsize=(35,40))
+    plots3.set_title("Bar finded")
+    plots3.imshow(img_with_bars, cmap = 'gray')
+
     plt.show()
+    # plt.subplot(131, figsize=(20,10)),plt.imshow(img, cmap = 'gray')
+    # plt.title('Original'), plt.xticks([]), plt.yticks([])
+    # plt.subplot(132, figsize=(20,10)),plt.imshow(thresh1,cmap = 'gray')
+    # plt.title('Segmentacao'), plt.xticks([]), plt.yticks([])
+    # plt.subplot(133, figsize=(20,10)),plt.imshow(img_with_bars,cmap = 'gray')
+    # plt.title('Barras encontradas'), plt.xticks([]), plt.yticks([])
+    # plt.show()
 
 
 
