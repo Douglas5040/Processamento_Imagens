@@ -5,7 +5,8 @@ import numpy as np
 import os
 import glob
 import time
-# from picamera import PiCamera
+from picamera import PiCamera
+from picamera.color import Color
 
 
 # Definicao da funcao morfologica
@@ -30,7 +31,6 @@ def analyze_bars(matblobs,countours_frame, file):
     rot_rect = cv2.minAreaRect(bar)
     b_rect = cv2.boundingRect(bar)
 
-
     (cx,cy),(sw,sh),angle = rot_rect
     rx,ry,rw,rh = b_rect
 
@@ -50,7 +50,7 @@ def analyze_bars(matblobs,countours_frame, file):
       
 
     # Area minima 
-    if sw * sh < 800:
+    if sw * sh < 400:
       continue
 
     # area maxima
@@ -66,8 +66,10 @@ def analyze_bars(matblobs,countours_frame, file):
     # print('rect_ratio:', rect_ratio)
 
     if rect_ratio <= 3 or rect_ratio >= 15.5:
-
       continue
+
+    # Desenhando o contorno da area da barra encontrada
+    frame = cv2.drawContours(countours_frame,[box],0,(0,255,0),1)
 
     # Desenhando o contorno da area da barra encontrada
     #frame = cv2.drawContours(countours_frame,[box],0,(0,0,255),1)
@@ -84,29 +86,31 @@ def analyze_bars(matblobs,countours_frame, file):
     # if countours_frame[int(cy),int(cx),0] > 100:
     #   continue
 
-    # Desenhando o contorno da area da barra encontrada
-    frame = cv2.drawContours(countours_frame,[box],0,(0,255,0),1)
-
     valid_bars.append(bar)
 
   if valid_bars:
     print("O Arquivo {}, possui um total de {} linhas pretas".format(os.path.basename(file), len(valid_bars)))
   
   #print('-----fim --> ', format(os.path.basename(file)), '\n\n')
-  cv2.imshow("countours_frame_in",countours_frame)
-  cv2.waitKey(1)
+  # cv2.imshow("countours_frame_in",countours_frame)
+  # cv2.waitKey(1)
 
   return valid_bars
 
 
 def main_process():
 
-  # camera = PiCamera() 
+  TIME_TAKE_PHOTO = time.strftime('%Y-%m-%d_%H:%M:%S') 
 
-  # camera.start_preview()
-  # time.sleep(10)
-  # camera.capture('../imgs/in/second_tests/image_' + time.strftime('%Y-%m-%d_%H:%M:%S') + '.jpg')
-  # camera.stop_preview()
+  camera = PiCamera() 
+
+  camera.start_preview()
+  time.sleep(10)
+  camera.annotate_text = "Distancia-alvo: 5m\nTamanho-barras: 5cm\nDistancia-entre: 15cm"
+  camera.annotate_text_size = 30
+  camera.annotate_background = Color('black')
+  camera.capture('../imgs/in/third_tests/image_' + TIME_TAKE_PHOTO + '.jpg')
+  camera.stop_preview()
 
   for file in glob.glob("../imgs/in/third_tests/*"):
 
@@ -122,12 +126,13 @@ def main_process():
     # ret, thresh1 = cv2.threshold(blurred, 9, 100, cv2.THRESH_TOZERO + cv2.THRESH_OTSU)  
     thresh1 = cv2.adaptiveThreshold (blurred, 190, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
 
-    cv2.imshow("thresholding",thresh1)
-    cv2.waitKey(1)
+    # cv2.imshow("thresholding",thresh1)
+    cv2.imwrite('../imgs/in/third_tests/segmentation_{}'.format(os.path.basename(file)), thresh1)
+    # cv2.waitKey(1)
 
     matmorph = morph_function(thresh1)
-    cv2.imshow("matmorph",matmorph)
-    cv2.waitKey(1)
+    # cv2.imshow("matmorph",matmorph)
+    # cv2.waitKey(1)
 
     img_with_bars = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR)
     valid_bars = analyze_bars(matmorph,img_with_bars, file)
@@ -136,21 +141,23 @@ def main_process():
     for b in range(len(valid_bars)):
       cv2.drawContours(img_with_bars,valid_bars,b,(0,255,255),-1)
 
-    cv2.imshow("img_with_bars",img_with_bars)
-    cv2.imwrite('../imgs/out/saida7.png', img_with_bars)
-    cv2.waitKey(0)
+    # cv2.imshow("img_with_bars",img_with_bars)
+    cv2.imwrite('../imgs/out/third_tests/found_bars_{}'.format(os.path.basename(file)), img_with_bars)
+    # cv2.waitKey(0)
 
-    fx, plots = plt.subplots(1, 1, figsize=(35,40))
-    plots.set_title("Original Image")
-    plots.imshow(img, cmap = 'gray')
+    # fig1, plots = plt.subplots(1, 1, figsize=(35,40))
+    # plots.set_title("Original Image")
+    # plots.imshow(img, cmap = 'gray')
 
-    fx, plots2 = plt.subplots(1, 1, figsize=(35,40))
-    plots2.set_title("Segmentation Image")
-    plots2.imshow(thresh1, cmap = 'gray')
+    # fig2, plots2 = plt.subplots(1, 1, figsize=(35,40))
+    # plots2.set_title("Segmentation Image")
+    # plots2.imshow(thresh1, cmap = 'gray')
+    # # fig2.savefig('../imgs/in/third_tests/segmentation_' + TIME_TAKE_PHOTO + '.jpg')
 
-    fx, plots3 = plt.subplots(1, 1, figsize=(35,40))
-    plots3.set_title("Bar finded")
-    plots3.imshow(img_with_bars, cmap = 'gray')
+    # fig3, plots3 = plt.subplots(1, 1, figsize=(35,40))
+    # plots3.set_title("Bar finded")
+    # plots3.imshow(img_with_bars, cmap = 'gray')
+    # # fig3.savefig('../imgs/in/third_tests/found_bars_' + TIME_TAKE_PHOTO + '.jpg')
 
     plt.show()
     # plt.subplot(131, figsize=(20,10)),plt.imshow(img, cmap = 'gray')
