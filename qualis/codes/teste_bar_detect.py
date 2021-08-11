@@ -105,68 +105,74 @@ def main_process():
   camera = PiCamera() 
 
   camera.start_preview()
-  time.sleep(10)
+  time.sleep(5)
   camera.annotate_text = "Distancia-alvo: 5m\nTamanho-barras: 5cm\nDistancia-entre: 15cm"
   camera.annotate_text_size = 30
   camera.annotate_background = Color('black')
   camera.capture('../imgs/in/third_tests/image_' + TIME_TAKE_PHOTO + '.jpg')
   camera.stop_preview()
 
-  for file in glob.glob("../imgs/in/third_tests/*"):
+  # for file in glob.glob("../imgs/in/third_tests/*"):
+  file = '../imgs/in/third_tests/image_' + TIME_TAKE_PHOTO + '.jpg'
+  img = cv2.imread(file) 
 
-    img = cv2.imread(file)  
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+  gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-    # Funcao Gaussiana para adicionar ruido (blur)
-    blurred = cv2.GaussianBlur(gray,(3,3),-1)
-    
-    # Aplicando a tecnica 'thresholding Otsu'
-    # Extrair a caracteristica da binarizacao da imagem
-    # Otsu thresholding     
-    # ret, thresh1 = cv2.threshold(blurred, 9, 100, cv2.THRESH_TOZERO + cv2.THRESH_OTSU)  
-    thresh1 = cv2.adaptiveThreshold (blurred, 190, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
+  # Funcao Gaussiana para adicionar ruido (blur)
+  blurred = cv2.GaussianBlur(gray,(3,3),-1)
+  
+  # Aplicando a tecnica 'thresholding Otsu'
+  # Extrair a caracteristica da binarizacao da imagem
+  # Otsu thresholding     
+  # ret, thresh1 = cv2.threshold(blurred, 9, 100, cv2.THRESH_TOZERO + cv2.THRESH_OTSU)  
+  thresh1 = cv2.adaptiveThreshold (blurred, 190, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
 
-    # cv2.imshow("thresholding",thresh1)
-    cv2.imwrite('../imgs/in/third_tests/segmentation_{}'.format(os.path.basename(file)), thresh1)
-    # cv2.waitKey(1)
+  cv2.rectangle(thresh1, (2,5), (375, 100), (0, 255, 0), -1)
+  thresh1 = cv2.putText(thresh1, "AdaptiveThreshold()", (5,27), cv2.FONT_HERSHEY_TRIPLEX, 0.7, 255)
+  thresh1 = cv2.putText(thresh1, "ADAPTIVE_THRESH_GAUSSIAN_C", (5,55), cv2.FONT_HERSHEY_TRIPLEX, 0.7, 255)
+  thresh1 = cv2.putText(thresh1, "Type = THRESH_BINARY", (5,77), cv2.FONT_HERSHEY_TRIPLEX, 0.7, 255)
 
-    matmorph = morph_function(thresh1)
-    # cv2.imshow("matmorph",matmorph)
-    # cv2.waitKey(1)
+  cv2.imshow("thresholding",thresh1)
+  cv2.imwrite('../imgs/out/third_tests/segmentation_{}'.format(os.path.basename(file)), thresh1)
+  cv2.waitKey(1)
 
-    img_with_bars = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR)
-    valid_bars = analyze_bars(matmorph,img_with_bars, file)
+  matmorph = morph_function(thresh1)
+  # cv2.imshow("matmorph",matmorph)
+  # cv2.waitKey(1)
+
+  img_with_bars = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR)
+  valid_bars = analyze_bars(matmorph,img_with_bars, file)
 
 
-    for b in range(len(valid_bars)):
-      cv2.drawContours(img_with_bars,valid_bars,b,(0,255,255),-1)
+  for b in range(len(valid_bars)):
+    cv2.drawContours(img_with_bars,valid_bars,b,(0,255,255),-1)
 
-    # cv2.imshow("img_with_bars",img_with_bars)
-    cv2.imwrite('../imgs/out/third_tests/found_bars_{}'.format(os.path.basename(file)), img_with_bars)
-    # cv2.waitKey(0)
+  # cv2.imshow("img_with_bars",img_with_bars)
+  cv2.imwrite('../imgs/out/third_tests/found_bars_{}'.format(os.path.basename(file)), img_with_bars)
+  # cv2.waitKey(0)
 
-    # fig1, plots = plt.subplots(1, 1, figsize=(35,40))
-    # plots.set_title("Original Image")
-    # plots.imshow(img, cmap = 'gray')
+  # fig1, plots = plt.subplots(1, 1, figsize=(35,40))
+  # plots.set_title("Original Image")
+  # plots.imshow(img, cmap = 'gray')
 
-    # fig2, plots2 = plt.subplots(1, 1, figsize=(35,40))
-    # plots2.set_title("Segmentation Image")
-    # plots2.imshow(thresh1, cmap = 'gray')
-    # # fig2.savefig('../imgs/in/third_tests/segmentation_' + TIME_TAKE_PHOTO + '.jpg')
+  # fig2, plots2 = plt.subplots(1, 1, figsize=(35,40))
+  # plots2.set_title("Segmentation Image")
+  # plots2.imshow(thresh1, cmap = 'gray')
+  # # fig2.savefig('../imgs/in/third_tests/segmentation_' + TIME_TAKE_PHOTO + '.jpg')
 
-    # fig3, plots3 = plt.subplots(1, 1, figsize=(35,40))
-    # plots3.set_title("Bar finded")
-    # plots3.imshow(img_with_bars, cmap = 'gray')
-    # # fig3.savefig('../imgs/in/third_tests/found_bars_' + TIME_TAKE_PHOTO + '.jpg')
+  # fig3, plots3 = plt.subplots(1, 1, figsize=(35,40))
+  # plots3.set_title("Bar finded")
+  # plots3.imshow(img_with_bars, cmap = 'gray')
+  # # fig3.savefig('../imgs/in/third_tests/found_bars_' + TIME_TAKE_PHOTO + '.jpg')
 
-    plt.show()
-    # plt.subplot(131, figsize=(20,10)),plt.imshow(img, cmap = 'gray')
-    # plt.title('Original'), plt.xticks([]), plt.yticks([])
-    # plt.subplot(132, figsize=(20,10)),plt.imshow(thresh1,cmap = 'gray')
-    # plt.title('Segmentacao'), plt.xticks([]), plt.yticks([])
-    # plt.subplot(133, figsize=(20,10)),plt.imshow(img_with_bars,cmap = 'gray')
-    # plt.title('Barras encontradas'), plt.xticks([]), plt.yticks([])
-    # plt.show()
+  plt.show()
+  # plt.subplot(131, figsize=(20,10)),plt.imshow(img, cmap = 'gray')
+  # plt.title('Original'), plt.xticks([]), plt.yticks([])
+  # plt.subplot(132, figsize=(20,10)),plt.imshow(thresh1,cmap = 'gray')
+  # plt.title('Segmentacao'), plt.xticks([]), plt.yticks([])
+  # plt.subplot(133, figsize=(20,10)),plt.imshow(img_with_bars,cmap = 'gray')
+  # plt.title('Barras encontradas'), plt.xticks([]), plt.yticks([])
+  # plt.show()
 
 
 
