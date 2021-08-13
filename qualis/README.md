@@ -1,4 +1,4 @@
-# Projeto Final de Processamento de Imagens 2021 - Relatório Final - Entrega: 14/07/2021
+# Sensor câmera, capturar barras pretas em uma placa de aço!
 
 
 |Douglas Queiroz Galúcio Batista Nº USP: 12114819
