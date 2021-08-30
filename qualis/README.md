@@ -1,8 +1,5 @@
-# Projeto Final de Processamento de Imagens 2021 - Relatório Final - Entrega: 14/07/2021
-
-
-Dheniffer Caroline Araújo Pessoa NºUSP: 12116252 |Douglas Queiroz Galúcio Batista Nº USP: 12114819
-:------------------------------:|:------------------------------:
+Douglas Queiroz
+:------------------------------:
 
 ## Título do Projeto: Técnicas de morfologia e segmentação aplicadas em imagens para detecção do nível de rios. 
 
